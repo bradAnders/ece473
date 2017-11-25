@@ -1,0 +1,2154 @@
+%!PS-Adobe-3.0
+%%Title: lab3.c
+%%For: 
+%%Creator: a2ps version 4.14
+%%CreationDate: Thu Oct 26 12:18:54 2017
+%%BoundingBox: 24 24 571 818
+%%DocumentData: Clean7Bit
+%%Orientation: Landscape
+%%Pages: 7
+%%PageOrder: Ascend
+%%DocumentMedia: A4 595 842 0 () ()
+%%DocumentNeededResources: font Courier
+%%+ font Courier-Bold
+%%+ font Courier-BoldOblique
+%%+ font Courier-Oblique
+%%+ font Helvetica
+%%+ font Helvetica-Bold
+%%+ font Symbol
+%%+ font Times-Bold
+%%+ font Times-Roman
+%%DocumentProcessColors: Black 
+%%DocumentSuppliedResources: procset a2ps-a2ps-hdr
+%%+ procset a2ps-black+white-Prolog
+%%+ encoding ISO-8859-1Encoding
+%%EndComments
+/a2psdict 200 dict def
+a2psdict begin
+%%BeginProlog
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+
+% EPSF import as in the Red Book
+/BeginInclude {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack 
+  userdict begin
+    0 setgray 0 setlinecap
+    1 setlinewidth 0 setlinejoin
+    10 setmiterlimit [ ] 0 setdash newpath
+    gs_languagelevel 1 ne {
+      false setstrokeadjust false setoverprint 
+    } if
+} bind def
+
+/EndInclude {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+/BeginEPSF {
+  BeginInclude
+  /showpage { } def
+} bind def
+
+/EndEPSF {
+  EndInclude
+} bind def
+
+% Page prefeed
+/page_prefeed {         % bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} bind def
+
+/deffont {
+  findfont exch scalefont def
+} bind def
+
+/reencode_font {
+  findfont reencode 2 copy definefont pop def
+} bind def
+
+% Function c-show (str => -)
+% centers text only according to x axis.
+/c-show { 
+  dup stringwidth pop
+  2 div neg 0 rmoveto
+  show
+} bind def
+
+% Function l-show (str => -)
+% prints texts so that it ends at currentpoint
+/l-show {
+  dup stringwidth pop neg 
+  0 
+  rmoveto show
+} bind def
+
+% center-fit show (str w => -)
+% show centered, and scale currentfont so that the width is less than w
+/cfshow {
+  exch dup stringwidth pop
+  % If the title is too big, try to make it smaller
+  3 2 roll 2 copy
+  gt
+  { % if, i.e. too big
+    exch div
+    currentfont exch scalefont setfont
+  } { % ifelse
+    pop pop 
+  }
+  ifelse
+  c-show			% center title
+} bind def
+
+% Return the y size of the current font
+% - => fontsize
+/currentfontsize {
+  currentfont /FontType get 0 eq {
+    currentfont /FontMatrix get 3 get
+  }{
+    currentfont /FontMatrix get 3 get 1000 mul
+  } ifelse
+} bind def
+
+% reencode the font
+% <encoding-vector> <fontdict> -> <newfontdict>
+/reencode { %def
+  dup length 5 add dict begin
+    { %forall
+      % <vector> <key> <val>
+      1 index /FID ne 
+      { def }{ pop pop } ifelse
+    } forall
+    /Encoding exch def % -
+
+    % Use the font's bounding box to determine the ascent, descent,
+    % and overall height; don't forget that these values have to be
+    % transformed using the font's matrix.
+    % We use `load' because sometimes BBox is executable, sometimes not.
+    % Since we need 4 numbers an not an array avoid BBox from being executed
+    /FontBBox load aload pop
+    FontMatrix transform /Ascent exch def pop
+    FontMatrix transform /Descent exch def pop
+    /FontHeight Ascent Descent sub def
+
+    % Get the underline position and thickness if they're defined.
+    % Use 1 if they are not defined.
+    currentdict /FontInfo 2 copy known
+    { get
+      /UnderlinePosition 2 copy % <FontInfo> /UP <FontInfo> /UP
+      2 copy known
+      { get }{ pop pop 1 } ifelse
+      0 exch FontMatrix transform exch pop
+      def % <FontInfo>
+
+      /UnderlineThickness 2 copy % <FontInfo> /UT <FontInfo> /UT
+      2 copy known
+      { get }{ pop pop 1 } ifelse
+      0 exch FontMatrix transform exch pop
+      def % <FontInfo>
+      pop % -
+    }{ pop pop
+    } ifelse
+
+    currentdict
+  end 
+} bind def
+
+% composite fonts for ASCII-EUC mixed strings
+% Version 1.2 1/31/1990
+% Original Ken'ichi HANDA (handa@etl.go.jp)
+% Modified Norio Katayama (katayama@rd.nacsis.ac.jp),1998
+% Extend & Fix Koji Nakamaru (maru@on.cs.keio.ac.jp), 1999
+% Anyone can freely copy, modify, distribute this program.
+
+/copyfont {	% font-dic extra-entry-count  copyfont  font-dic
+	1 index maxlength add dict begin
+	{	1 index /FID ne 2 index /UniqueID ne and
+		{def} {pop pop} ifelse
+	} forall
+	currentdict
+	end
+} bind def
+
+/compositefont { % ASCIIFontName EUCFontName RomanScale RomanOffset Rot(T/F) compositefont font
+    /RomanRotation exch def
+    /RomanOffset exch def
+    /RomanScale exch def
+    userdict /fixeucfont_dict known not {
+	userdict begin
+	    /fixeucfont_dict 2 dict begin
+		/UpperByteEncoding [
+		    16#00 1 16#20 { pop 0 } for
+		    16#21 1 16#28 { 16#20 sub } for
+		    16#29 1 16#2F { pop 0 } for
+		    16#30 1 16#74 { 16#27 sub } for
+		    16#75 1 16#FF { pop 0 } for
+		] def
+	        /LowerByteEncoding [
+		    16#00 1 16#A0 { pop /.notdef } for
+		    16#A1 1 16#FE { 16#80 sub 16 2 string cvrs
+				    (cXX) dup 1 4 -1 roll
+				    putinterval cvn } for
+		    /.notdef
+		] def
+		currentdict
+	    end def
+	end
+    } if
+    findfont dup /FontType get 0 eq {
+	14 dict begin
+	    %
+	    % 7+8 bit EUC font
+	    %
+	    12 dict begin
+		/EUCFont exch def
+		/FontInfo (7+8 bit EUC font) readonly def
+		/PaintType 0 def
+		/FontType 0 def
+		/FontMatrix matrix def
+		% /FontName
+		/Encoding fixeucfont_dict /UpperByteEncoding get def
+		/FMapType 2 def
+		EUCFont /WMode known
+		{ EUCFont /WMode get /WMode exch def }
+		{ /WMode 0 def } ifelse
+		/FDepVector [
+		    EUCFont /FDepVector get 0 get
+		    [ 16#21 1 16#28 {} for 16#30 1 16#74 {} for ]
+		    {
+			13 dict begin
+			    /EUCFont EUCFont def
+			    /UpperByte exch 16#80 add def	
+			    % /FontName
+			    /FontInfo (EUC lower byte font) readonly def
+			    /PaintType 0 def
+			    /FontType 3 def
+			    /FontMatrix matrix def
+			    /FontBBox {0 0 0 0} def
+			    /Encoding
+				fixeucfont_dict /LowerByteEncoding get def
+			    % /UniqueID
+			    % /WMode
+			    /BuildChar {
+				gsave
+				exch dup /EUCFont get setfont
+				/UpperByte get
+				2 string
+				dup 0 4 -1 roll put
+				dup 1 4 -1 roll put
+				dup stringwidth setcharwidth
+				0 0 moveto show
+				grestore
+			    } bind def
+			    currentdict
+			end
+			/lowerbytefont exch definefont
+		    } forall
+		] def
+		currentdict
+	    end
+	    /eucfont exch definefont
+	    exch
+	    findfont 1 copyfont dup begin
+		RomanRotation {
+			/FontMatrix FontMatrix
+			[ 0 RomanScale neg RomanScale 0 RomanOffset neg 0 ]
+			matrix concatmatrix def
+		}{
+			/FontMatrix FontMatrix
+			[ RomanScale 0 0 RomanScale 0 RomanOffset ] matrix concatmatrix
+			def
+			/CDevProc
+			    {pop pop pop pop 0 exch -1000 exch 2 div 880} def
+		} ifelse
+	    end
+	    /asciifont exch definefont
+	    exch
+	    /FDepVector [ 4 2 roll ] def
+	    /FontType 0 def
+	    /WMode 0 def
+	    /FMapType 4 def
+	    /FontMatrix matrix def
+	    /Encoding [0 1] def
+	    /FontBBox {0 0 0 0} def
+%	    /FontHeight 1.0 def % XXXX
+	    /FontHeight RomanScale 1.0 ge { RomanScale }{ 1.0 } ifelse def
+	    /Descent -0.3 def   % XXXX
+	    currentdict
+	end
+	/tmpfont exch definefont
+	pop
+	/tmpfont findfont
+    }{
+	pop findfont 0 copyfont
+    } ifelse
+} def	
+
+/slantfont {	% FontName slant-degree  slantfont  font'
+    exch findfont 1 copyfont begin
+    [ 1 0 4 -1 roll 1 0 0 ] FontMatrix exch matrix concatmatrix
+    /FontMatrix exch def
+    currentdict
+    end
+} def
+
+% Function print line number (<string> # -)
+/# {
+  gsave
+    sx cw mul neg 2 div 0 rmoveto
+    f# setfont
+    c-show
+  grestore
+} bind def
+
+% -------- Some routines to enlight plain b/w printings ---------
+
+% Underline
+% width --
+/dounderline {
+  currentpoint
+  gsave
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    0 rlineto
+    stroke
+  grestore
+} bind def
+
+% Underline a string
+% string --
+/dounderlinestring {
+  stringwidth pop
+  dounderline
+} bind def
+
+/UL {
+  /ul exch store
+} bind def
+
+% Draw a box of WIDTH wrt current font
+% width --
+/dobox {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    stroke
+  grestore
+} bind def
+
+/BX {
+  /bx exch store
+} bind def
+
+% Box a string
+% string --
+/doboxstring {
+  stringwidth pop
+  dobox
+} bind def
+
+%
+% ------------- Color routines ---------------
+%
+/FG /setrgbcolor load def
+
+% Draw the background
+% width --
+/dobackground {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    bgcolor aload pop setrgbcolor
+    fill
+  grestore
+} bind def
+
+% Draw bg for a string
+% string --
+/dobackgroundstring {
+  stringwidth pop
+  dobackground
+} bind def
+
+
+/BG {
+  dup /bg exch store
+  { mark 4 1 roll ] /bgcolor exch store } if
+} bind def
+
+
+/Show {
+  bg { dup dobackgroundstring } if
+  ul { dup dounderlinestring } if
+  bx { dup doboxstring } if
+  show
+} bind def
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T {
+  cw mul x0 add
+  bg { dup currentpoint pop sub dobackground } if
+  ul { dup currentpoint pop sub dounderline } if
+  bx { dup currentpoint pop sub dobox } if
+  y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n {
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+/S {
+  Show
+} bind def
+
+%%BeginResource: procset a2ps-a2ps-hdr 2.0 2
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Function title: prints page header.
+% <ct> <rt> <lt> are passed as argument
+/title { 
+  % 1. Draw the background
+  x v get y v get moveto
+  gsave
+    0 th 2 div neg rmoveto 
+    th setlinewidth
+    0.95 setgray
+    pw 0 rlineto stroke
+  grestore
+  % 2. Border it
+  gsave
+    0.7 setlinewidth
+    pw 0 rlineto
+    0 th neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+  % stk: ct rt lt
+  x v get y v get th sub 1 add moveto
+%%IncludeResource: font Helvetica
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  % 3. The left title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    fnfs 0.8 mul hm rmoveto
+    show			% left title
+  grestore
+  exch
+  % stk: ct ltw rt
+  % 4. the right title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    dup
+    pw exch stringwidth pop fnfs 0.8 mul add sub
+    hm
+    rmoveto
+    show			% right title
+  grestore
+  % stk: ct ltw rtw
+  % 5. the center title
+  gsave
+    pw 3 1 roll
+    % stk: ct pw ltw rtw
+    3 copy 
+    % Move to the center of the left room
+    sub add 2 div hm rmoveto
+    % What is the available space in here?
+    add sub fnfs 0.8 mul sub fnfs 0.8 mul sub
+    % stk: ct space_left
+%%IncludeResource: font Helvetica-Bold
+  fHelvetica-Bold fnfs scalefont setfont
+    cfshow
+  grestore
+} bind def
+
+% Function border: prints virtual page border
+/border { %def
+  gsave				% print four sides
+    0 setgray
+    x v get y v get moveto
+    0.7 setlinewidth		% of the square
+    pw 0 rlineto
+    0 ph neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+} bind def
+
+% Function water: prints a water mark in background
+/water { %def
+  gsave
+    scx scy moveto rotate
+%%IncludeResource: font Times-Bold
+  fTimes-Bold 100 scalefont setfont
+    .97 setgray
+    dup stringwidth pop 2 div neg -50 rmoveto
+    show
+  grestore
+} bind def
+
+% Function rhead: prints the right header
+/rhead {  %def
+  lx ly moveto
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  l-show
+} bind def
+
+% Function footer (cf rf lf -> -)
+/footer {
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  dx dy moveto
+  show
+
+  snx sny moveto
+  l-show
+  
+  fnx fny moveto
+  c-show
+} bind def
+%%EndResource
+%%BeginResource: procset a2ps-black+white-Prolog 2.0 1
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T { 
+  cw mul x0 add y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n { %def
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+}  bind def
+
+/S {
+  Show
+} bind def
+
+/p {
+  false UL
+  false BX
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/sy {
+  false UL
+  false BX
+  fSymbol bfs scalefont setfont
+  Show
+} bind def
+
+/k {
+  false UL
+  false BX
+  fCourier-Oblique bfs scalefont setfont
+  Show
+} bind def
+
+/K {
+  false UL
+  false BX
+  fCourier-Bold bfs scalefont setfont
+  Show
+} bind def
+
+/c {
+  false UL
+  false BX
+  fCourier-Oblique bfs scalefont setfont
+  Show
+} bind def
+
+/C {
+  false UL
+  false BX
+  fCourier-BoldOblique bfs scalefont setfont
+  Show 
+} bind def
+
+/l {
+  false UL
+  false BX
+  fHelvetica bfs scalefont setfont
+  Show
+} bind def
+
+/L {
+  false UL
+  false BX
+  fHelvetica-Bold bfs scalefont setfont
+  Show 
+} bind def
+
+/str{
+  false UL
+  false BX
+  fTimes-Roman bfs scalefont setfont
+  Show
+} bind def
+
+/e{
+  false UL
+  true BX
+  fHelvetica-Bold bfs scalefont setfont
+  Show
+} bind def
+
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier
+%%IncludeResource: font Courier-Oblique
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Times-Roman
+%%IncludeResource: font Symbol
+%%IncludeResource: font Courier-BoldOblique
+%%BeginResource: encoding ISO-8859-1Encoding
+/ISO-8859-1Encoding [
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclam /quotedbl /numbersign /dollar /percent /ampersand /quoteright 
+/parenleft /parenright /asterisk /plus /comma /minus /period /slash 
+/zero /one /two /three /four /five /six /seven 
+/eight /nine /colon /semicolon /less /equal /greater /question 
+/at /A /B /C /D /E /F /G 
+/H /I /J /K /L /M /N /O 
+/P /Q /R /S /T /U /V /W 
+/X /Y /Z /bracketleft /backslash /bracketright /asciicircum /underscore 
+/quoteleft /a /b /c /d /e /f /g 
+/h /i /j /k /l /m /n /o 
+/p /q /r /s /t /u /v /w 
+/x /y /z /braceleft /bar /braceright /asciitilde /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclamdown /cent /sterling /currency /yen /brokenbar /section 
+/dieresis /copyright /ordfeminine /guillemotleft /logicalnot /hyphen /registered /macron 
+/degree /plusminus /twosuperior /threesuperior /acute /mu /paragraph /bullet 
+/cedilla /onesuperior /ordmasculine /guillemotright /onequarter /onehalf /threequarters /questiondown 
+/Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla 
+/Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute /Icircumflex /Idieresis 
+/Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply 
+/Oslash /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn /germandbls 
+/agrave /aacute /acircumflex /atilde /adieresis /aring /ae /ccedilla 
+/egrave /eacute /ecircumflex /edieresis /igrave /iacute /icircumflex /idieresis 
+/eth /ntilde /ograve /oacute /ocircumflex /otilde /odieresis /divide 
+/oslash /ugrave /uacute /ucircumflex /udieresis /yacute /thorn /ydieresis 
+] def
+%%EndResource
+% Initialize page description variables.
+/sh 595 def
+/sw 842 def
+/llx 24 def
+/urx 818 def
+/ury 571 def
+/lly 24 def
+/#copies 1 def
+/th 15.000000 def
+/fnfs 11 def
+/bfs 8.005733 def
+/cw 4.803440 def
+
+% Dictionary for ISO-8859-1 support
+/iso1dict 8 dict begin
+  /fCourier ISO-8859-1Encoding /Courier reencode_font
+  /fCourier-Bold ISO-8859-1Encoding /Courier-Bold reencode_font
+  /fCourier-BoldOblique ISO-8859-1Encoding /Courier-BoldOblique reencode_font
+  /fCourier-Oblique ISO-8859-1Encoding /Courier-Oblique reencode_font
+  /fHelvetica ISO-8859-1Encoding /Helvetica reencode_font
+  /fHelvetica-Bold ISO-8859-1Encoding /Helvetica-Bold reencode_font
+  /fTimes-Bold ISO-8859-1Encoding /Times-Bold reencode_font
+  /fTimes-Roman ISO-8859-1Encoding /Times-Roman reencode_font
+currentdict end def
+/bgcolor [ 0 0 0 ] def
+/bg false def
+/ul false def
+/bx false def
+% The font for line numbering
+/f# /Helvetica findfont bfs .6 mul scalefont def
+/fSymbol /Symbol findfont def
+/hm fnfs 0.25 mul def
+/pw
+   cw 81.400000 mul
+def
+/ph
+   501.959430 th add
+def
+/pmw urx llx sub pw 2 mul sub 1 div def
+/pmh 0 def
+/v 0 def
+/x [
+  0
+  dup pmw add pw add
+] def
+/y [
+  pmh ph add 0 mul ph add
+  dup
+] def
+/scx sw 2 div def
+/scy sh 2 div def
+/snx urx def
+/sny lly 2 add def
+/dx llx def
+/dy sny def
+/fnx scx def
+/fny dy def
+/lx snx def
+/ly ury fnfs 0.8 mul sub def
+/sx 0 def
+/tab 8 def
+/x0 0 def
+/y0 0 def
+%%EndSetup
+
+%%Page: (1-2) 1
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(//  File:     lab3.c ) c n
+(//  Author:   Bradley Anderson) N
+(//  Created:  Oct-23, 2017) N
+(//  ) N
+(//  Collaboration:) N
+(//  Worked with Kyle O'Brien and Makenzie Brian) N
+() p n
+(//  -- Power Pins --) c n
+(//  BLACK  := VCC) N
+(//  WHTITE := GND) N
+() p n
+() N
+(//  -- Button Board --) c n
+(//  J1  :=  Brown) N
+(//  J2  :=  Red) N
+(//  J3  :=  Orange) N
+(//  J4  :=  Yellow) N
+(//  J5  :=  Green) N
+(//  J6  :=  Blue) N
+(//  J7  :=  Purple) N
+(//  J9  :=  Gray) N
+(//) N
+(//  GND     :=  White) N
+(//  VCC     :=  Black) N
+(//  SW_COM  :=  *nc*) N
+(//  COM_LVL :=  Brown   \(GND\)) N
+(//  COM_EN  :=  Orange  \(7seg DEC7\)) N
+() p n
+() N
+(//  -- 4 Digit Display --) c n
+(//  SEL0  :=  Green     \(PORTB 4\)) N
+(//  SEL1  :=  Blue      \(PORTB 5\)) N
+(//  SEL2  :=  Purple    \(PORTB 6\)) N
+(//  EN    :=  White     \(VCC\)) N
+(//  EN_N  :=  Black     \(GND\)) N
+(//  PWM   :=  Gray      \(PORTF 3\)) N
+(//  DEC5  :=  *nc*) N
+(//  DEC6  :=  *nc*) N
+(//  DEC7  :=  Orange    \(buttonBoard COM_EN\)) N
+(//  NC    :=  NC) N
+(//) N
+(//  A   :=  Brown   \(buttonBoard J1\)) N
+(//  B   :=  Red     \(buttonBoard J2\)) N
+(//  C   :=  Orange  \(buttonBoard J3\)) N
+(//  D   :=  Yellow  \(buttonBoard J4\)) N
+(//  E   :=  Green   \(buttonBoard J5\)) N
+(//  F   :=  Blue    \(buttonBoard J6\)) N
+(//  G   :=  Purple  \(buttonBoard J7\)) N
+(//  DP  :=  Gray    \(buttonBoard J8\)) N
+(//) N
+(//  A_2   :=  Rib0-Red  \(PORTA 0\)) N
+(//  B_2   :=  Rib1      \(PORTA 1\)) N
+(//  C_2   :=  Rib2      \(PORTA 2\)) N
+(//  D_2   :=  Rib3      \(PORTA 3\)) N
+(//  E_2   :=  Rib4      \(PORTA 4\)) N
+(//  F_2   :=  Rib5      \(PORTA 5\)) N
+(//  G_2   :=  Rib6      \(PORTA 6\)) N
+(//  DP_2  :=  Rib7      \(PORTA 7\)) N
+(//  GND   :=  Rib8      \(PORTA 8\)) N
+(//  VCC   :=  Rib9      \(PORTA 9\)) N
+() p n
+() N
+(lab3.c) (Page 1/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(//  -- Encoders --) c n
+(//  NC    :=  *nc*) N
+(//  NC    :=  Brown   *nc*) N
+(//  NC    :=  Red     *nc*) N
+(//  NC    :=  Orange  *nc*) N
+(//  SOUT  :=  Yellow  \(PORTB 3\)) N
+(//  SIN   :=  Green   *nc*) N
+(//  CKINH :=  Blue    \(GND, Clock Inhibiter\)) N
+(//  SCK   :=  Purple  \(PORTB 1, Clock\)) N
+(//  SH/LD :=  Gray    \(PORTE 6, Shift/Load\)) N
+(//  GND   :=  White) N
+(//  VCC   :=  Black) N
+() p n
+() N
+(//  -- Bar Graph --) c n
+(//  SD_OUT  :=  Brown   *nc*) N
+(//  SRCLK   :=  Red     \(PB1 SCLK\)) N
+(//  REGCLK  :=  Orange  \(PB0\)) N
+(//  OE_N    :=  Yellow  \(PB7\)) N
+(//  SDIN    :=  Green   \(PB2 MOSI\)) N
+(//  VDD     :=  Black) N
+(//  GND     :=  White) N
+() p n
+() N
+(//  -- PORTA -> 4 Digit Display --) c n
+(//  PA0 :=  Rib0 \(Red\)) N
+(//  PA1 :=  Rib1) N
+(//  PA2 :=  Rib2) N
+(//  PA3 :=  Rib3) N
+(//  PA4 :=  Rib4) N
+(//  PA5 :=  Rib5) N
+(//  PA6 :=  Rib6) N
+(//  PA7 :=  Rib7) N
+(//  PA8 :=  Rib8) N
+(//  PA9 :=  Rib9) N
+() p n
+() N
+(//  -- PORTB --) c n
+(//  PB0 :=  Orange  \(bargraph REGCLK\)) N
+(//  PB1 :=  Red     \(bargraph&encoder SCLK\)) N
+(//  PB2 :=  Green   \(bargraph MOSI\)) N
+(//  PB3 :=  YELLOW  \(encoder SIN\)) N
+(//  PB4 :=  Green   \(7seg SEL0\)) N
+(//  PB5 :=  Blue    \(7seg SEL1\)) N
+(//  PB6 :=  Purple  \(7seg SEL2\)) N
+(//  PB7 :=  Yellow  \(bargraph OE_N\)) N
+(//  PB8 :=  White   \(GND\)) N
+(//  PB9 :=  Black   \(VCC\)) N
+(#define) K
+( RCLK PB0) p n
+(#define) K
+( SCLK PB1) p n
+(#define) K
+( MOSI PB2) p n
+(#define) K
+( MISO PB3) p n
+(#define) K
+( SEL0 PB4) p n
+(#define) K
+( SEL1 PB5) p n
+(#define) K
+( SEL2 PB6) p n
+(#define) K
+( OE_N PB7) p n
+() N
+() N
+(//  -- PORTE --) c n
+(//  PE0 :=  *nc*) N
+(//  PE1 :=  *nc*) N
+(//  PE2 :=  *nc*) N
+(lab3.c) (Page 2/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (1/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (3-4) 2
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(//  PE3 :=  *nc*) c n
+(//  PE4 :=  *nc*) N
+(//  PE5 :=  *nc*) N
+(//  PE6 :=  Gray  \(Shift/Load encoder\)) N
+(//  PE7 :=  *nc*) N
+(//  PE8 :=  White \(GND\)) N
+(//  PE9 :=  Black \(VCC\)) N
+(#define) K
+( SHLD PE6 ) p n
+() N
+(//  -- PORTF --) c n
+(//  PF0 :=  *nc*) N
+(//  PF1 :=  *nc*) N
+(//  PF2 :=  *nc*) N
+(//  PF3 :=  Gray \(7seg PWM\)) N
+(//  PF4 :=  *nc*) N
+(//  PF5 :=  *nc*) N
+(//  PF6 :=  *nc*) N
+(//  PF7 :=  *nc*) N
+(//  PF8 :=  *nc*) N
+(//  PF9 :=  *nc*) N
+(#define) K
+( PWM PF3) p n
+() N
+() N
+(#define) K
+( F_CPU 16000000 ) p
+(// cpu speed in hertz ) c n
+(#define) K
+( TRUE 1) p n
+(#define) K
+( FALSE 0) p n
+(#define) K
+( true 1) p n
+(#define) K
+( false 0) p n
+(#define) K
+( True 1) p n
+(#define) K
+( False 0) p n
+(#include) K
+( <avr/io.h>) p n
+(#include) K
+( <util/delay.h>) p n
+(#include) K
+( <avr/interrupt.h>) p n
+() N
+(// bits used for digit selection) c n
+() p n
+(// DEMUX to LED wiring) c n
+(#define) K
+( SELD1 \(0x0 << SEL0\)) p n
+(#define) K
+( SELD2 \(0x1 << SEL0\)) p n
+(#define) K
+( SELD3 \(0x3 << SEL0\)) p n
+(#define) K
+( SELD4 \(0x4 << SEL0\)) p n
+(#define) K
+( SELDD \(0x2 << SEL0\)) p n
+(#define) K
+( SELBN \(0x7 << SEL0\)) p n
+(#define) K
+( SELCL !SELBN) p n
+() N
+(// Blank 7segment) c n
+(#define) K
+( BLNK 0xFF) p n
+() N
+(#define) K
+( TRUE 1) p n
+(#define) K
+( FALSE 0) p n
+(typedef) K
+( ) p
+(unsigned) k
+( ) p
+(char) k
+( bool;) p n
+(bool a = TRUE;) N
+(bool b = FALSE;) N
+() N
+(// Holds data to be sent to the segments. logic zero turns segment on) c n
+(uint8_t segment_data[5]; ) p n
+() N
+(// Decimal to 7-segment LED display encodings, logic "0" turns on segment) c n
+(uint8_t dec_to_7seg[12];) p n
+() N
+(// Select digit array) c n
+(uint8_t digitSelect[8];) p n
+(lab3.c) (Page 3/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p n
+(// Holds value of buttons from last check) c n
+(volatile) K
+( uint8_t buttonState;) p n
+() N
+(// Holds state of encoders) c n
+(volatile) K
+( uint8_t encoderState;) p n
+() N
+(// Number displayed to 7seg) c n
+(volatile) K
+( uint16_t segNum = 0;) p n
+() N
+(// Number displayed to bargraph) c n
+(volatile) K
+( uint8_t barNum = 0;) p n
+() N
+(// Function prototypes) c n
+(uint8_t chk_button\(uint8_t\);) p n
+(void) k
+( toggle_button_bus\(\);) p n
+(void) k
+( spiTxRx\(\);) p n
+(void) k
+( interpret_encoders\(\);) p n
+(void) k
+( outputToBargraph\(uint8_t\);) p n
+(uint8_t checkDirection\(uint8_t, uint8_t\);) N
+(void) k
+( spi_init\(\);) p n
+(void) k
+( timer_init\(\);) p n
+(void) k
+( digit_init\(\);) p n
+(void) k
+( increment\(\);) p n
+(void) k
+( decrement\(\);) p n
+() N
+(//******************************************************************************) c n
+(//    -- chk_buttons --                                     ) N
+(//  Checks the state of the button number passed to it. It shifts in ones till  ) N
+( ) N
+(//  the button is pushed. Function returns a 1 only once per debounced button   ) N
+( ) N
+(//  push so a debounce and toggle function can be implemented at the same time. ) N
+( ) N
+(//  Adapted to check all buttons from Ganssel's "Guide to Debouncing"           ) N
+( ) N
+(//  Expects active low pushbuttons on PINA port.  Debounce time is determined by) N
+( ) N
+(//  external loop delay times 12.) N
+(//******************************************************************************) N
+(uint8_t chk_button\(uint8_t button\) {) p n
+(  ) S
+(static) K
+( uint16_t State[8] = {0};     ) p
+(// Static array is initialied once at comp) c n
+(ile time) N
+(  State[button] = \(State[button]<<1\) | !bit_is_clear\(PINA, button\) | 0xE000;) p n
+(  ) S
+(if) K
+( \(State[button] == 0xFF00\) ) p
+(return) K
+( TRUE;) p n
+(  ) S
+(return) K
+( FALSE;) p n
+(} ) S
+(//chk_button) c n
+() p n
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- segment_sum --                                   ) N
+(//  takes a 16-bit binary input value and places the appropriate equivalent 4 di) N
+(git ) N
+(//  BCD segment code in the array segment_data for display.                     ) N
+(  ) N
+(//  array is loaded at exit as:  |digit3|digit2|colon|digit1|digit0|) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( segsum\(uint16_t sum\)) p n
+({) N
+(lab3.c) (Page 4/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (2/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (5-6) 3
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(  ) p
+(//determine how many digits there are ) c n
+(  ) p
+(//break up decimal sum into 4 digit-segments) c n
+(  ) p
+(//blank out leading zero digits ) c n
+(  ) p
+(//now move data to right place for misplaced colon position) c n
+() p n
+(  uint8_t i=0;    ) S
+(// for counter) c n
+(  uint8_t ldZero = TRUE;) p n
+() N
+(  segment_data[0] = sum % 10;        ) N
+(  segment_data[1] = sum/10 % 10;        ) N
+(  segment_data[2] = 10;         ) S
+(// keep colon off; dig10 is mapped to BLNK      ) c n
+(  ) N
+(  segment_data[3] = sum/100 % 10;        ) p n
+(  segment_data[4] = sum/1000 % 10;        ) N
+() N
+(  ) S
+(// Covert dec to BCD, ignoring colon and blanking leading zeros) c n
+(  ) p
+(//ldZero=TRUE -> index has not yet found a non-zero digit) c n
+(  ) p
+(for) K
+( \(i=4; i > 0; --i\)) p n
+(  {) N
+(    ) S
+(if) K
+( \(ldZero && \(segment_data[i]==0\)\)) p n
+(      segment_data[i] = BLNK;) N
+(    ) S
+(else) K n
+(    {) p n
+(      ) S
+(if) K
+( \(i!=2\) ldZero = FALSE;) p n
+(      segment_data[i] = dec_to_7seg[segment_data[i]];) N
+(    }) S
+(//if) c n
+(  }) p
+(//for) c n
+() p n
+(  segment_data[0] = dec_to_7seg[segment_data[i]];) N
+() N
+(  ) S
+(return) K
+(;) p n
+(}) S
+(//segment_sum) c n
+() p n
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- Checks State of Buttons on 7seg Bus --) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( toggle_button_bus\(\) {) p n
+() N
+(  ) S
+(//make PORTA an input port with pullups ) c n
+(  DDRA = 0x00;    ) p
+(// 0 is input, 1 is output) c n
+(  PORTA = 0xFF;   ) p
+(// 0 is float, 1 is pull-up) c n
+() p n
+(  ) S
+(//enable tristate buffer for pushbutton switches) c n
+(  PORTB &= SELCL;) p n
+(  PORTB |= SELBN;) N
+() N
+(  ) S
+(//buttonState=0;) c n
+(  ) p
+(int) k
+( i;) p n
+(  ) S
+(//now check each button and increment the count as needed) c n
+(  ) p
+(for) K
+( \(i=0; i<8; i++\)) p n
+(  {) N
+(    ) S
+(if) K
+( \(chk_button\(i\)\)) p n
+(      buttonState ^= 1<<i;) N
+(  }) S
+(//for) c n
+() p n
+() N
+(  ) S
+(//disable tristate buffer for pushbutton switches) c n
+(  PORTB &= SELCL;) p n
+(lab3.c) (Page 5/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p n
+(  ) S
+(// Reset A as output) c n
+(  DDRA = 0xFF;) p n
+(}) N
+() N
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- Transmits and Receives to/from SPI --) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( spiTxRx\(\) {) p n
+() N
+(  ) S
+(// Toggle Encoder Shift/Load) c n
+(  PORTE &= ~\(1<<SHLD\);) p n
+(  PORTE |= \(1<<SHLD\);) N
+() N
+(  ) S
+(// SPI write from global variable) c n
+(  SPDR = barNum;) p n
+() N
+(  ) S
+(// Wait for 8 clock cycles) c n
+(  ) p
+(while) K
+(\(bit_is_clear\(SPSR, SPIF\)\) {}) p n
+() N
+(  ) S
+(// Save the most recent serial reading into global variable) c n
+(  encoderState = SPDR;) p n
+() N
+(  ) S
+(// Toggle Bargraph Register Clock) c n
+(  PORTB |= \(1<<RCLK\);) p n
+(  PORTB &= ~\(1<<RCLK\);) N
+(}) N
+() N
+() N
+(#define) K
+( RWFN 4) p n
+(#define) K
+( LWFN 5) p n
+(//#define LWFN 6) c n
+(//#define RWFN 7) N
+(#define) K
+( RMSK 0b0011) p n
+(#define) K
+( LMSK 0b1100) p n
+(//******************************************************************************) c n
+(*****) N
+(//    -- Performs Logic to Test Direction of Encoder Movement --) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( interpret_encoders\(\){) p n
+(  uint8_t curr=0;) N
+(  uint8_t prev=0;) N
+(  ) S
+(volatile) K
+( ) p
+(static) K
+( uint8_t encR_cwse = 0;) p n
+(  ) S
+(volatile) K
+( ) p
+(static) K
+( uint8_t encR_ccws = 0;) p n
+(  ) S
+(volatile) K
+( ) p
+(static) K
+( uint8_t encL_cwse = 0;) p n
+(  ) S
+(volatile) K
+( ) p
+(static) K
+( uint8_t encL_ccws = 0;) p n
+(  ) S
+(volatile) K
+( ) p
+(static) K
+( uint8_t encStatusReg=0;) p n
+() N
+(  ) S
+(// encStatusReg variable decoding) c n
+(  ) p
+(// bit7     bit6    bit5    bit4    bit3    bit2    bit1    bit0) c n
+(  ) p
+(//                  LWFN    RWFN    LPrv    LPrv    RPrv    RPrv) c n
+(  ) p
+(// WFN = Wait for Next) c n
+() p n
+(  ) S
+(// Encoder states) c n
+(  curr = \(encoderState & 0x0F\);) p n
+(  prev = \(encStatusReg & 0x0F\);) N
+() N
+(lab3.c) (Page 6/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (3/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (7-8) 4
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(  ) p
+(// Right Encoder Changed State) c n
+(  ) p
+(if) K
+( \(\(curr & RMSK\) != \(prev & RMSK\)\) {) p n
+() N
+(    ) S
+(// Shift registers to keep track of turning speed) c n
+(    ) p
+(switch) K
+(\(checkDirection\(\(curr & RMSK\),\(prev & RMSK\)\)\) {) p n
+(      ) S
+(case) K
+( 0b01:) p n
+(        encR_cwse = \(encR_cwse<<1\)|1;) N
+(        encR_ccws =  encR_ccws>>1;) N
+(        ) S
+(break) K
+(;     ) p n
+(      ) S
+(case) K
+( 0b10:) p n
+(        encR_cwse =  encR_cwse>>1;) N
+(        encR_ccws = \(encR_ccws<<1\)|1;) N
+(        ) S
+(break) K
+(;) p n
+(      ) S
+(default) K
+(:) p n
+(        encR_cwse = encR_cwse>>1;) N
+(        encR_ccws = encR_ccws>>1;) N
+(        ) S
+(break) K
+(;) p n
+(    }) N
+() N
+(    ) S
+(// When at notch, reset turning speed) c n
+(    ) p
+(if) K
+( \(\(curr & RMSK\) == RMSK\) {) p n
+(      encR_cwse = 0;) N
+(      encR_ccws = 0;) N
+(    }) N
+() N
+(    ) S
+(// Check right encoder) c n
+(    ) p
+(if) K
+( \(encStatusReg & \(1<<RWFN\)\) {) p n
+() N
+(      ) S
+(if) K
+( \(encR_cwse >= 0b11\) {) p n
+() N
+(        ) S
+(// Extra increments to compensate for missed bits) c n
+(        ) p
+(if) K
+( \(encR_cwse >= 0b11111\) {) p n
+(          ) S
+(if) K
+( \(encR_cwse >= 0b111111\) {) p n
+(            increment\(\);) N
+(          }) N
+(          increment\(\);) N
+(        }) N
+() N
+(        increment\(\);) N
+(        encStatusReg &= ~\(1<<RWFN\);) N
+(        encR_cwse = 0;) N
+(        encR_ccws = 0;) N
+() N
+(      } ) S
+(else) K
+( ) p
+(if) K
+( \(encR_ccws >= 0b11\) {) p n
+() N
+(        ) S
+(// Extra decrements to compensate for missed bits) c n
+(        ) p
+(if) K
+( \(encR_ccws >= 0b11111\) {) p n
+(          ) S
+(if) K
+( \(encR_ccws >= 0b111111\) {) p n
+(            decrement\(\);) N
+(          }) N
+(          decrement\(\);) N
+(        }) N
+() N
+(        decrement\(\);) N
+(        encStatusReg &= ~\(1<<RWFN\);) N
+(        encR_cwse = 0;) N
+(        encR_ccws = 0;) N
+(      }) N
+(    }) N
+() N
+(    ) S
+(// When at halfway point, enable state change) c n
+(    ) p
+(//  This prevents a floating state next to notch triggering an event) c n
+(lab3.c) (Page 7/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(    ) p
+(if) K
+( \(\(curr & RMSK\) == 0x00\) {) p n
+(      encStatusReg |= \(1<<RWFN\);) N
+(    }) N
+() N
+(    encStatusReg &= ~RMSK;) N
+(    encStatusReg |= \(encoderState & RMSK\);) N
+(  }) N
+() N
+() N
+(  ) S
+(// Left Encoder Changed State) c n
+(  ) p
+(if) K
+( \(\(curr & LMSK\) != \(prev & LMSK\)\) {) p n
+() N
+(    ) S
+(// Shift registers to keep track of turning speed) c n
+(    ) p
+(switch) K
+(\(checkDirection\(\(\(curr & LMSK\)>>2\),\(\(prev & LMSK\)>>2\)\)\) {) p n
+(      ) S
+(case) K
+( 0b01:) p n
+(        encL_cwse = \(encL_cwse<<1\)|1;) N
+(        encL_ccws =  encL_ccws>>1;) N
+(        ) S
+(break) K
+(;     ) p n
+(      ) S
+(case) K
+( 0b10:) p n
+(        encL_cwse =  encL_cwse>>1;) N
+(        encL_ccws = \(encL_ccws<<1\)|1;) N
+(        ) S
+(break) K
+(;) p n
+(      ) S
+(default) K
+(:) p n
+(        encL_cwse = encL_cwse>>1;) N
+(        encL_ccws = encL_ccws>>1;) N
+(        ) S
+(break) K
+(;) p n
+(    }) N
+() N
+(    ) S
+(// When at notch, reset turning speed) c n
+(    ) p
+(if) K
+( \(\(curr & LMSK\) == LMSK\) {) p n
+(      encL_cwse = 0;) N
+(      encL_ccws = 0;) N
+(    }) N
+() N
+(    ) S
+(// Check right encoder) c n
+(    ) p
+(if) K
+( \(encStatusReg & \(1<<LWFN\)\) {) p n
+() N
+(      ) S
+(if) K
+( \(encL_cwse >= 0b11\) {) p n
+() N
+(        ) S
+(// Extra increments to compensate for missed bits) c n
+(        ) p
+(if) K
+( \(encL_cwse >= 0b11111\) {) p n
+(          ) S
+(if) K
+( \(encL_cwse >= 0b111111\) {) p n
+(            increment\(\);) N
+(          }) N
+(          increment\(\);) N
+(        }) N
+() N
+(        increment\(\);) N
+(        encStatusReg &= ~\(1<<LWFN\);) N
+(        encL_cwse = 0;) N
+(        encL_ccws = 0;) N
+() N
+(      } ) S
+(else) K
+( ) p
+(if) K
+( \(encL_ccws >= 0b11\) {) p n
+() N
+(        ) S
+(// Extra decrements to compensate for missed bits) c n
+(        ) p
+(if) K
+( \(encL_ccws >= 0b11111\) {) p n
+(          ) S
+(if) K
+( \(encL_ccws >= 0b111111\) {) p n
+(            decrement\(\);) N
+(          }) N
+(          decrement\(\);) N
+(        }) N
+() N
+(lab3.c) (Page 8/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (4/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (9-10) 5
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(        decrement\(\);) p n
+(        encStatusReg &= ~\(1<<LWFN\);) N
+(        encL_cwse = 0;) N
+(        encL_ccws = 0;) N
+(      }) N
+(    }) N
+() N
+(    ) S
+(// When at halfway point, enable state change) c n
+(    ) p
+(//  This prevents a floating state next to notch triggering an event) c n
+(    ) p
+(if) K
+( \(\(curr & LMSK\) == 0x00\) {) p n
+(      encStatusReg |= \(1<<LWFN\);) N
+(    }) N
+() N
+(    encStatusReg &= ~LMSK;) N
+(    encStatusReg |= \(encoderState & LMSK\);) N
+(  }) N
+(}) N
+() N
+() N
+(#define) K
+( CWSE 0b01) p n
+(#define) K
+( CCWS 0b10) p n
+(//******************************************************************************) c n
+(*****) N
+(//    -- Encoder Checker) N
+(//    Return Value) N
+(//    bit1    bit0) N
+(//    0       1   Clockwise) N
+(//    1       0   Counter Clockwise) N
+(//******************************************************************************) N
+(*****) N
+(uint8_t checkDirection\(uint8_t curr, uint8_t prev\) {) p n
+() N
+(  curr &= 0b11;) N
+(  prev &= 0b11;) N
+(  ) S
+(switch) K
+( \(curr\) {) p n
+(    ) S
+(case) K
+( 0b01:) p n
+(      ) S
+(switch) K
+( \(prev\){) p n
+(        ) S
+(case) K
+( 0b11:) p n
+(          ) S
+(return) K
+( CWSE;) p n
+(        ) S
+(case) K
+( 0b00:) p n
+(          ) S
+(return) K
+( CCWS;) p n
+(      }) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( 0b00:) p n
+(      ) S
+(switch) K
+( \(prev\){) p n
+(        ) S
+(case) K
+( 0b01:) p n
+(          ) S
+(return) K
+( CWSE;) p n
+(        ) S
+(case) K
+( 0b10:) p n
+(          ) S
+(return) K
+( CCWS;) p n
+(      }) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( 0b10:) p n
+(      ) S
+(switch) K
+( \(prev\){) p n
+(        ) S
+(case) K
+( 0b00:) p n
+(          ) S
+(return) K
+( CWSE;) p n
+(        ) S
+(case) K
+( 0b11:) p n
+(          ) S
+(return) K
+( CCWS;) p n
+(      }) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( 0b11:) p n
+(      ) S
+(switch) K
+( \(prev\){) p n
+(        ) S
+(case) K
+( 0b10:) p n
+(lab3.c) (Page 9/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(          ) p
+(return) K
+( CWSE;) p n
+(        ) S
+(case) K
+( 0b01:) p n
+(          ) S
+(return) K
+( CCWS;) p n
+(      }) N
+(      ) S
+(break) K
+(;) p n
+(  }) S
+(//switch) c n
+() p n
+(  ) S
+(return) K
+( 0;) p n
+(}) N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- Timer 0 Compare Interrupt --) N
+(//******************************************************************************) N
+(*****) N
+(ISR\(TIMER0_COMP_vect\){) p n
+() N
+(  spiTxRx\(\);) N
+() N
+(  interpret_encoders\(\);) N
+() N
+(  toggle_button_bus\(\);) N
+() N
+(}) S
+(//ISR TIM0_COMP_vect) c n
+(//******************************************************************************) N
+(*****) N
+() p n
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- Serial Peripheral Interface Initialization --) N
+(//) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( spi_init\(\) {) p n
+() N
+(  ) S
+(// Direction Registers) c n
+(  DDRB |= \(1<<RCLK\) | \(1<<SCLK\) | \(1<<MOSI\) | \(1<<OE_N\);) p n
+(  DDRE |= \(1<<SHLD\);) N
+() N
+(  ) S
+(// SPI Control Register) c n
+(  SPCR |= \(1<<SPE\) | \(1<<MSTR\) | \(0<<SPR1\)|\(1<<SPR0\);) p n
+() N
+(  ) S
+(// SPI Status Register) c n
+(  SPSR |= \(1<<SPI2X\);) p n
+() N
+(  ) S
+(// SPI Data Register) c n
+(  PORTB &= ~\(1<<OE_N\);) p n
+(}) N
+() N
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- TIMER Initialization --) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( timer_init\(\){) p n
+() N
+(  ) S
+(// Timer counter 0 setup, running off i/o clock) c n
+() p n
+(lab3.c) (Page 10/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (5/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (11-12) 6
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(  ) p
+(// Asynchronous Status Register, pg107) c n
+(  ) p
+(//    Run off of external clock) c n
+(  ASSR  |= \(1<<AS0\);) p n
+() N
+(  ) S
+(// Timer/Counter Interrupt Mask, pg109) c n
+(  ) p
+(//    enable compare interrupt) c n
+(  TIMSK |= \(1<<OCIE0\);) p n
+() N
+(  ) S
+(// Timer/Counter Control Register, pg104) c n
+(  ) p
+(//    CTC mode, no prescale) c n
+(  TCCR0 = \(\(1<<WGM01\)|\(0<<WGM00\) | \(0<<COM01\)|\(0<<COM00\) | \(0<<CS02\)|\(0<<CS01\)|\() p n
+(1<<CS00\)\);) N
+() N
+(  ) S
+(// Output Compare Register) c n
+(  ) p
+(//    Set button&encoder check time with this) c n
+(  OCR0 = 0x1F;) p n
+(}) N
+() N
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//  -- Digit Initialization) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( digit_init\(\){) p n
+() N
+(  ) S
+(// select pins for DEMUX in array form) c n
+(  digitSelect[0] = SELD1;) p n
+(  digitSelect[1] = SELD2;) N
+(  digitSelect[2] = SELBN;) N
+(  digitSelect[3] = SELD3;) N
+(  digitSelect[4] = SELD4;) N
+() N
+(  ) S
+(// BCD mapping) c n
+(  dec_to_7seg[0] = \(uint8_t\) 0b11000000;) p n
+(  dec_to_7seg[1] = \(uint8_t\) 0b11111001;) N
+(  dec_to_7seg[2] = \(uint8_t\) 0b10100100;) N
+(  dec_to_7seg[3] = \(uint8_t\) 0b10110000;) N
+(  dec_to_7seg[4] = \(uint8_t\) 0b10011001;) N
+(  dec_to_7seg[5] = \(uint8_t\) 0b10010010;) N
+(  dec_to_7seg[6] = \(uint8_t\) 0b10000010;) N
+(  dec_to_7seg[7] = \(uint8_t\) 0b11111000;) N
+(  dec_to_7seg[8] = \(uint8_t\) 0b10000000;) N
+(  dec_to_7seg[9] = \(uint8_t\) 0b10010000;) N
+(  dec_to_7seg[10] = \(uint8_t\) 0xFF;) N
+() N
+(  ) S
+(// 0 is input, 1 is output) c n
+(  DDRB = \(1<<SEL0\)|\(1<<SEL1\)|\(1<<SEL2\);) p n
+(  ) S
+(//) c n
+(  DDRF = \(1<<PWM\);) p n
+(  PORTF &= ~\(1<<PWM\);) N
+(}) N
+() N
+() N
+(#define) K
+( bState0  0b110) p n
+(#define) K
+( bState1  0b000) p n
+(#define) K
+( bState2  0b010) p n
+(#define) K
+( bState4  0b100) p n
+(#define) K
+( bState5  0b101) p n
+(#define) K
+( bState10 0b1010) p n
+(//******************************************************************************) c n
+(lab3.c) (Page 11/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(*****) c n
+(//    -- Conditionally Increment Based on State) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( increment\(\) {) p n
+() N
+(  ) S
+(switch) K
+( \(buttonState\) {) p n
+(    ) S
+(default) K
+(:) p n
+(      segNum++;) N
+(    ) S
+(case) K
+( bState0:) p n
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState1:) p n
+(      segNum++;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState2:) p n
+(      segNum += 2;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState4:) p n
+(      segNum += 4;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState5:) p n
+(      segNum += 5;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState10:) p n
+(      segNum += 10;) N
+(      ) S
+(break) K
+(;) p n
+(  }) N
+(  ) S
+(if) K
+( \(segNum >= 1024\) {) p n
+(    segNum = 0;) N
+(  }) N
+(}) N
+() N
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//    -- Conditionally Decrement Based on State) N
+(//******************************************************************************) N
+(*****) N
+(void) k
+( decrement\(\) {) p n
+(  ) S
+(switch) K
+( \(buttonState\) {) p n
+(    ) S
+(default) K
+(:) p n
+(      segNum--;) N
+(    ) S
+(case) K
+( bState0:) p n
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState1:) p n
+(      segNum--;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState2:) p n
+(      segNum -= 2;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState4:) p n
+(      segNum -= 4;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState5:) p n
+(      segNum -= 5;) N
+(      ) S
+(break) K
+(;) p n
+(    ) S
+(case) K
+( bState10:) p n
+(      segNum -= 10;) N
+(      ) S
+(break) K
+(;) p n
+(  }) N
+(  ) S
+(if) K
+( \(segNum >= 1024\) {) p n
+(lab3.c) (Page 12/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (6/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (13-14) 7
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(    segNum = 1023;) p n
+(  }) N
+(}) N
+() N
+() N
+() N
+(//******************************************************************************) c n
+(*****) N
+(//                                  main) N
+(//  Does main stuff) N
+(//******************************************************************************) N
+(*****) N
+(int) k
+( main\() p
+(void) k
+(\) {) p n
+() N
+(  ) S
+(/*) c n
+(   * #define RCLK Register Clock) N
+(   * #define SCLK Serial Clock) N
+(   * #define MOSI Serial to bargraph) N
+(   * #define MISO Serial from encoders) N
+(   * #define SEL0 Digit select to 7seg) N
+(   * #define SEL1 Digit select to 7seg) N
+(   * #define SEL2 Digit select to 7seg) N
+(   * #define OE_N Enable to bargraph) N
+(   * #define SHLD Shift/Load to encoder) N
+(   */) S
+( ) p n
+() N
+(  uint8_t i = 0;) N
+() N
+(  digit_init\(\);) N
+(  timer_init\(\);) N
+(  spi_init\(\);) N
+() N
+(  sei\(\);) N
+() N
+(  ) S
+(while) K
+(\(1\)) p n
+(  {) N
+() N
+(    ) S
+(//interpret_encoders\(\);) c n
+() p n
+(    ) S
+(//barNum++;) c n
+(    ) p
+(//segNum--;) c n
+(    ) p
+(//segNum = buttonState;) c n
+(    ) p
+(// Update number to digitSelect[i]) c n
+(    segsum\(segNum\);) p n
+(    barNum = buttonState;) N
+() N
+(    ) S
+(//make PORTA an output) c n
+(    DDRA = 0xFF;) p n
+() N
+(    ) S
+(//bound a counter \(0-4\) to keep track of digit to display ) c n
+(    ) p
+(for) K
+( \(i=0; i<5; i++\)) p n
+(    {) N
+(      ) S
+(// Clear digit select) c n
+(      PORTB &= SELCL;) p n
+() N
+(      ) S
+(//update digit to display) c n
+(      PORTB |= digitSelect[i];) p n
+() N
+(      ) S
+(//send 7 segment code to LED segments) c n
+(      PORTA = segment_data[i];) p n
+() N
+(      ) S
+(//dimming/flicker correction) c n
+(lab3.c) (Page 13/14) (Oct 26, 17 0:06) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(      ) p
+(//_delay_ms\(10\);) c n
+(      _delay_us\(200\);) p n
+(    }) S
+(//for) c n
+() p n
+(    ) S
+(//_delay_us\(100\);) c n
+() p n
+(    ) S
+(//outputToBargraph\(0b10101010\);) c n
+() p n
+(  }) S
+(//while) c n
+() p n
+(  ) S
+(return) K
+( 0;) p n
+() N
+(}) S
+(//main) c n
+(lab3.c) (Page 14/14) (Oct 26, 17 0:06) title
+border
+grestore
+(Printed by ) rhead
+(lab3.c) (7/7) (Thursday October 26, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+
+%%Trailer
+end
+%%EOF
