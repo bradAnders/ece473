@@ -168,10 +168,6 @@ ISR(TIMER0_OVF_vect){
 }//ISR TIMER0_OVF_vect
 
 
-// Needs to be put in a timer:
-
-
-
 
 //*****************************************************************************
 //      -- Timer 1 Compare Interrupt: Alarm signal generation -- 
@@ -233,7 +229,8 @@ void timer_init(){
     // Timer 3: PWM for audio volume, but also correct speed for SPI reading
     // CTC mode, Clear on match
     DDRE |= (1<<PWM_VOL);
-    TCCR3A |= (1<<WGM33)|(1<<WGM32)|(1<<WGM31)|(1<<WGM30) | (1<<COM3A1) | (1<<CS30);
+    TCCR3A = (1<<WGM31)|(1<<WGM30) | (1<<COM3A1)|(0<<COM3A0);
+    TCCR3B = (1<<WGM33)|(1<<WGM32) | (0<<CS32)|(1<<CS31)|(0<<CS30);
     OCR3A = 0x000F;
 
 }
