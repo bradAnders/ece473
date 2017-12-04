@@ -113,7 +113,7 @@ void spiTxRx() {
         string2lcd((char *)lcdText2);  //write upper half
         textLine = 1;
     }
-    _delay_us(500);
+    //_delay_us(500);
 
     // Toggle Encoder Shift/Load
     PORTD &= ~(1<<SHLD_ENC);
@@ -141,7 +141,15 @@ void spiTxRx() {
 //******************************************************************************
 ISR(TIMER0_OVF_vect){
     static uint8_t clock=0;
+    static uint8_t spiCount=0;
     clock++;
+    spiCount++;
+
+    if (spiCount == 15) {
+        spiCount = 0;
+        //volume++;
+    }
+
     if (clock == 128){
         clock_s++;
         clock = 0;
@@ -190,11 +198,13 @@ ISR(TIMER1_COMPA_vect){
 //      -- Timer 3 Compare Interrupt: Audio Amp Volume to DAC --
 //      -- Also use this as a slower interrupt for SPI Rx/Tx --
 //*****************************************************************************
-//ISR(TIMER3_COMPA_vect){
-//    //PORTE ^= (1<<PWM_VOL);
-//    PORTD ^= (1<<PWM_VOL);
+ISR(TIMER3_OVF_vect){
+    //DDRE |= 0b00000010;
+    //PORTE ^= 0b00000010;
+    //PORTD ^= (1<<PWM_VOL);
+    //volume += 10;
 
-//}//ISR
+}//ISR
 
 
 
@@ -212,6 +222,7 @@ void timer_init(){
     // Timer/Counter Interrupt Mask, pg109
     //    Timer 0: overflow interrupt enable
     TIMSK |= (1<<TOIE0) | (1<<OCIE1A) | (1<<OCIE3A);
+    //ETIMSK |= (1<<TOIE3);
 
     // Timer/Counter Control Register, pg104
     // Timer 0: 32kHz osc. for internal clock
@@ -228,10 +239,11 @@ void timer_init(){
 
     // Timer 3: PWM for audio volume, but also correct speed for SPI reading
     // CTC mode, Clear on match
-    DDRE |= (1<<PWM_VOL);
-    TCCR3A = (1<<WGM31)|(1<<WGM30) | (1<<COM3A1)|(0<<COM3A0);
-    TCCR3B = (1<<WGM33)|(1<<WGM32) | (0<<CS32)|(1<<CS31)|(0<<CS30);
-    OCR3A = 0x000F;
+    DDRE = 0xFF;
+    PORTE = 0xFF;
+    TCCR3A = (1<<WGM31)|(0<<WGM30) | (1<<COM3A1)|(0<<COM3A0);
+    TCCR3B = (0<<WGM33)|(1<<WGM32) | (0<<CS32)|(1<<CS31)|(0<<CS30);
+    OCR3A = 70;
 
 }
 
@@ -397,7 +409,6 @@ int main(void) {
     digit_init();
     timer_init();
     spi_init();
-    spi_init();
     lcd_init();
     adc_init(CDS);
     clear_display();
@@ -422,7 +433,6 @@ int main(void) {
         if (alarm_h >= 60)
             alarm_h = 0;
 
-        spiTxRx();
 
         interpret_encoders();
         // -- READ BUTTONS --
@@ -436,11 +446,13 @@ int main(void) {
         OCR2 = 255- (adc_result)/4;
 
 
+        spiTxRx();
 
         // -- TIME DISPLAY --
 
         // Display the button latch state on the bargraph
-        barNum = clock_s;
+        //barNum = clock_s;
+        barNum = volume;
         //barNum = encoderState;
 
         // Convert minutes and hours to a number for displaying
@@ -449,7 +461,8 @@ int main(void) {
         else 
             segNum = clock_m + 100*clock_h;
 
-        OCR3A = volume;
+        OCR3A = (volume<<1);
+        //segNum = volume;
 
         // Update number to digitSelect[i]
         segsum(segNum);
@@ -470,6 +483,7 @@ int main(void) {
             default:
                 break;
         }
+
 
         // Prints new values to the 7 seg display
         update7Seg();
