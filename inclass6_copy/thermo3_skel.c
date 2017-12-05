@@ -35,24 +35,27 @@ void spi_init(void){
     SPSR=(1<<SPI2X); //SPI at 2x speed (8 MHz)  
 }//spi_init
 
+
+
 /***********************************************************************/
 /*                                main                                 */
 /***********************************************************************/
 int main ()
 {     
     uint16_t lm73_temp;  //a place to assemble the temperature from the lm73
-    uint8_t tempNum[1] = {0};
+    //uint8_t tempNum[1] = {0};
     char tempChar[2];
+    const uint8_t address = 0b10010000;     // Model 0, pin floating
 
     spi_init(); //initalize SPI 
     lcd_init(); //initalize LCD (lcd_functions.h)
-    clear_display(); //initalize TWI (twi_master.h)  
+    init_twi(); //initalize TWI (twi_master.h)  
 
     sei();           //enable interrupts before entering loop
 
     //set LM73 mode for reading temperature by loading pointer register
-    lm73_wr_buf[0] = 0b00000000; //load lm73_wr_buf[0] with temperature pointer address
-    twi_start_wr(0x90, lm73_wr_buf, 2); //start the TWI write process
+    lm73_wr_buf[0] = 0x00; //load lm73_wr_buf[0] with temperature pointer address
+    twi_start_wr(address, lm73_wr_buf, 2); //start the TWI write process
     _delay_ms(2);    //wait for the xfer to finish
 
     clear_display(); //clean up the display
@@ -60,13 +63,12 @@ int main ()
     while(1){          //main while loop
         _delay_ms(100); //tenth second wait
         clear_display();                  //wipe the display
-        twi_start_rd(0x90,lm73_rd_buf,2); //read temperature data from LM73 (2 bytes) 
+        twi_start_rd(address, lm73_rd_buf, 2); //read temperature data from LM73 (2 bytes) 
         _delay_ms(2);    //wait for it to finish
         lm73_temp = lm73_rd_buf[0]; //save high temperature byte into lm73_temp
         lm73_temp = lm73_temp << 8; //shift it into upper byte 
         lm73_temp |= lm73_rd_buf[1]; //"OR" in the low temp byte to lm73_temp 
-        lm73_temp_convert(tempNum[0], lm73_temp,1 ); //convert to string in array with itoa() from avr-libc                           
-        itoa(tempNum[0], tempChar, 10);
-        char2lcd(tempChar[0]); //send the string to LCD (lcd_functions)
+        lm73_temp_convert(tempChar, lm73_temp, 1); //convert to string in array with itoa() from avr-libc                           
+        string2lcd(tempChar); //send the string to LCD (lcd_functions)
 } //while
 } //main
