@@ -107,12 +107,12 @@
 //  -- PORTD --
 //  PD0 :=  SCL     (TWI temp)
 //  PD1 :=  SDA     (TWI temp)
-//  PD2 :=  Gray    (Shift/Load encoder)
-//  PB3 :=  Yellow  (bargraph OE_N)
-//  PD4 :=  *nc*
-//  PD5 :=  *nc*
+//  PD2 :=  		(UART1 RX)
+//  PB3 :=  		(UART1 TX)
+//  PD4 :=  Gray    (Shift/Load encoder)
+//  PD5 :=  Yellow  (bargraph OE_N)
 //  PD6 :=  *nc*
-//  PD7 :=  *nc*
+//  PD7 :=  Purple	(PWM for alarm beeping)
 //  PD8 :=  White (GND)
 //  PD9 :=  Black (VCC)
 

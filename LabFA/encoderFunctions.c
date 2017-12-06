@@ -25,6 +25,10 @@
 
 // Holds state of encoders
 volatile uint8_t encoderState;
+extern uint16_t current_fm_freq;
+extern volatile uint8_t freqTime;
+extern volatile uint8_t needToChangeStation;
+
 
 
 //******************************************************************************
@@ -148,7 +152,7 @@ void interpret_encoders(){
         // Check right encoder
         if (encStatusReg & (1<<LWFN)) {
 
-            if (encL_cwse >= 0b11) {
+            if (encL_cwse >= 0b1) {
 
                 // Extra increments to compensate for missed bits
                 if (encL_cwse >= 0b11111) {
@@ -163,7 +167,7 @@ void interpret_encoders(){
                 encL_cwse = 0;
                 encL_ccws = 0;
 
-            } else if (encL_ccws >= 0b11) {
+            } else if (encL_ccws >= 0b1) {
 
                 // Extra decrements to compensate for missed bits
                 if (encL_ccws >= 0b11111) {
@@ -275,9 +279,19 @@ void increment(uint8_t LR) {
             }
             break;
         case DISP_TIME:
-            volume += 10;
-            if (volume < 10)
-                volume = 250;
+            if (LR == LEFT) {
+				freqTime = 0;
+				needToChangeStation = 1;
+	            current_fm_freq += 20;
+				if (current_fm_freq >= 10810) {
+					needToChangeStation = 0;
+					current_fm_freq = 10810;
+				}
+			} else {
+				volume += 10;
+				if (volume < 10)
+					volume = 250;
+			}
             break;
         default:
             break;
@@ -306,9 +320,19 @@ void decrement(uint8_t LR) {
             }
             break;
         case DISP_TIME:
-            volume -= 10;
-            if (volume > 240)
-                volume = 0;
+			if (LR == LEFT) {
+				freqTime = 0;
+				needToChangeStation = 1;
+				current_fm_freq -= 20;
+				if (current_fm_freq <= 8790) {
+					needToChangeStation = 0;
+					current_fm_freq = 8790;
+				}
+            } else {
+				volume -= 10;
+				if (volume > 240)
+					volume = 0;
+			}
         default:
             break;
     }

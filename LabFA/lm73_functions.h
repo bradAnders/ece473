@@ -2,8 +2,18 @@
 // Roger Traylor 11.27.10
 //special defines and functions for the lm73 temperature sensor
 
+#ifndef TRUE_FALSE
+#define TRUE_FALSE
+
 #define TRUE  1
 #define FALSE 0
+
+#endif //TRUE_FALSE
+
+
+
+#ifndef TWI_MASTER
+#define TWI_MASTER
 
 #include "twi_master.h"  //my TWCR_START, STOP, NACK, RNACK, SEND
 //use the status codes in: usr/local/AVRMacPack/avr-3/include/util/twi.h
@@ -21,3 +31,4 @@
 //not implemented 
 uint8_t  lm73_temp_convert(char temp_digits[], uint16_t lm73_temp, uint8_t f_not_c);
   
+#endif //TWI_MASTER

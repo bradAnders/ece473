@@ -37,6 +37,10 @@
 #define COLON3 0b10
 
 
+// Radio
+#define RAD_RST PE2
+#define RAD_INT PE7
+
 
 // Hard code boolean type
 #define TRUE 1
@@ -63,5 +67,6 @@ extern volatile uint8_t buttonState;
 extern volatile uint8_t encoderState;
 
 enum states {DISP_TIME, SET_TIME, ALARM, SNOOZE, SET_ALARM};
+enum radio_band {AM, FM, SW};
 
 #endif // MAIN

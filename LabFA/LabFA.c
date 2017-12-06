@@ -18,12 +18,13 @@
 #include "lm73_functions.h"
 #include "twi_master.h"
 #include "uart_functions.h"
+#include "si4734.h"
 
 bool a = TRUE;
 bool b = FALSE;
 
 //enum states {DISP_TIME, SET_TIME, ALARM, SNOOZE, SET_ALARM};
-enum states STATE = DISP_TIME;
+volatile enum states STATE = DISP_TIME;
 
 // Variables for ADC
 uint8_t  i;              //dummy variable
@@ -64,6 +65,22 @@ volatile uint16_t segNum = 0;
 
 // Number displayed to bargraph
 volatile uint8_t barNum = 0;
+
+// Radio variables
+volatile enum radio_band current_radio_band = FM;
+extern volatile uint8_t STC_interrupt;
+volatile uint8_t freqTime=0;
+volatile uint8_t needToChangeStation = 0;
+
+uint16_t eeprom_fm_freq;
+uint16_t eeprom_am_freq;
+uint16_t eeprom_sw_freq;
+uint8_t  eeprom_volume;
+
+uint16_t current_fm_freq = 10630;
+uint16_t current_am_freq;
+uint16_t current_sw_freq;
+uint8_t  current_volume;
 
 // Function prototypes
 void spiTxRx();
@@ -160,6 +177,7 @@ ISR(TIMER0_OVF_vect) {
     if (clock == 128){
 		timeToCheckForRX = 1;
         clock_s++;
+		freqTime++;
         clock = 0;
     }
     if (clock_s >= 60) {
@@ -449,6 +467,7 @@ void twiRx() {
 		
 		// -- VOLUME --
 		OCR3A = (volume<<1);
+		current_volume = volume;
 		sprintf(buffer,"%s V=%d%%",lcdTextTemp, (int)(volume/2.50));
 		//sprintf(buffer,tempCharRemote);
 	}
@@ -459,6 +478,9 @@ void twiRx() {
 
 
 
+//******************************************************************************
+//		-- Tells UART to start transmitting and then reads two characters --
+//******************************************************************************
 void uartTxRx() {
 	static char buffer[16] = "no!";
 	//static uint8_t count = 0;
@@ -478,6 +500,109 @@ void uartTxRx() {
 
 
 //******************************************************************************
+//		-- Checks if alarm should be going off --
+//******************************************************************************
+void checkIfAlarm() {
+	if (STATE != SET_ALARM) {
+		if ((alarm_s + 100*alarm_m + 10000*alarm_h == clock_s + 100*clock_m + 10000*clock_h)
+		|| (snuze_s + 100*snuze_m + 10000*snuze_h == clock_s + 100*clock_m + 10000*clock_h))
+		STATE = ALARM;
+
+	}
+
+	if (alarm_m >= 60)
+	alarm_m = 0;
+	if (alarm_h >= 60)
+	alarm_h = 0;
+}
+
+
+
+//******************************************************************************
+//		-- Reads global variables and converts them to 7seg data --
+//******************************************************************************
+void diplayTimeToSegment() {
+	// -- TIME DISPLAY --
+
+	// Display the button latch state on the bargraph
+	barNum = clock_s;
+	
+	if (freqTime < 4) {
+		segNum = current_fm_freq/10;
+		segsum(segNum);
+		segment_data[1] &= 0b01111111;
+	} else {
+		// Convert minutes and hours to a number for displaying
+		if (STATE == SET_ALARM)
+			segNum = alarm_m + 100*alarm_h;
+		else
+			segNum = clock_m + 100*clock_h;
+
+	
+		// Update number to digitSelect[i]
+		segsum(segNum);
+		if (am_pm)
+			segment_data[2] &= ~(1<<COLON3);
+		else
+			segment_data[2] |= (1<<COLON3);
+
+		// colon blink
+		switch (clock_s % 2) {
+			case 0:
+				if (STATE == ALARM)
+					segment_data[2] |= (1<COLON1) | (1<<COLON2);
+				break;
+			case 1:
+				segment_data[2] &= ~((1<<COLON1) | (1<<COLON2));
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+
+
+//******************************************************************************
+//		-- Initializes the radio --
+//******************************************************************************
+void radio_init() {
+	
+	DDRE = 0xFF;		//PORTE output, low
+	PORTE = 0x00;
+	
+	//DDRE  |= (1<<RAD_RST);
+	PORTE |= (1<<RAD_RST); //Radio reset is on at powerup (active high)
+	//Enable interrupt for radio
+	EICRB |= (1<<ISC71) | (0<<ISC70); //GPIO is pull-up; detect falling edge
+	EIMSK |= (1<<INT7);
+	
+	// Turn off pull up resistor
+	PORTE &= ~(1<<RAD_INT);
+	DDRE |= (1<<RAD_INT);
+	
+	// Toggle reset pin for at least 100us
+	//DDRE |= (1<<RAD_RST);
+	PORTE |= (1<<RAD_RST);
+	_delay_us(200);
+	PORTE &= ~(1<<RAD_RST);
+	_delay_us(50);
+	
+	// Set radio interrupt back to input
+	DDRE &= ~(1<<RAD_INT);
+	//PORTE |= (1<<RAD_INT); // pull up
+}
+
+
+
+//******************************************************************************
+//		-- Response from radio --
+//******************************************************************************
+ISR(INT7_vect) {STC_interrupt = TRUE;}
+	
+	
+	
+//******************************************************************************
 //                                  main
 //  Does main stuff
 //******************************************************************************
@@ -491,38 +616,39 @@ int main(void) {
     adc_init(CDS);
     clear_display();
 	uart_init();
+	radio_init();
 	
-	DDRE = 0xFF;		//PORTE output, low
-	PORTE = 0x00;
+	sei();
+	
+	
 
 	//set LM73 mode for reading temperature by loading pointer register
 	lm73_wr_buf[0] = 0x00; //load lm73_wr_buf[0] with temperature pointer address
-	//char text = ' ';
 	
 	// Tell TWI to start writing, number of bytes = 2
 	twi_start_wr(lm73_address_local, lm73_wr_buf, 2);
 	
 	// Wait for the transfer to finish
 	_delay_ms(2);
+	
+	
+	fm_pwr_up();
+	current_fm_freq = 10630;
+	set_property(0x4001,0x0000);
+	fm_tune_freq();
 
-    sei();
+    
 
     while(1) {
-
+		
+		if (needToChangeStation) {
+			needToChangeStation = 0;
+			fm_tune_freq();
+		}
         // State Machine Control!
         stateSwitcher();
 
-        if (STATE != SET_ALARM) {
-            if ((alarm_s + 100*alarm_m + 10000*alarm_h == clock_s + 100*clock_m + 10000*clock_h) 
-                    || (snuze_s + 100*snuze_m + 10000*snuze_h == clock_s + 100*clock_m + 10000*clock_h)) 
-                STATE = ALARM;
-
-        }
-
-        if (alarm_m >= 60)
-            alarm_m = 0;
-        if (alarm_h >= 60)
-            alarm_h = 0;
+        checkIfAlarm();
 
      
         // -- READ BUTTONS --
@@ -531,49 +657,13 @@ int main(void) {
 		spiTxRx();
 		interpret_encoders();
 		
-		
 		// -- UART --
 		uartTxRx();
 		
-		
 		// -- TWI --
 		twiRx();
-		//text = uart_getc();
-		//char2lcd(text);
-		//lcdTextTemp = "                 ";
-		
 
-        // -- TIME DISPLAY --
-
-        // Display the button latch state on the bargraph
-        barNum = clock_s;
-
-        // Convert minutes and hours to a number for displaying
-        if (STATE == SET_ALARM)
-            segNum = alarm_m + 100*alarm_h;
-        else 
-            segNum = clock_m + 100*clock_h;
-
-		
-        // Update number to digitSelect[i]
-        segsum(segNum);
-        if (am_pm)
-            segment_data[2] &= ~(1<<COLON3);
-        else
-            segment_data[2] |= (1<<COLON3);
-
-        // colon blink
-        switch (clock_s % 2) {
-            case 0:
-                if (STATE == ALARM)
-                    segment_data[2] |= (1<COLON1) | (1<<COLON2);
-                break;
-            case 1:
-                segment_data[2] &= ~((1<<COLON1) | (1<<COLON2));
-                break;
-            default:
-                break;
-        }
+		diplayTimeToSegment();
 
 		update7Seg();
         

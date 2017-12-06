@@ -16,6 +16,15 @@
 char uart_tx_buf[40];      //holds string to send to uart
 char uart_rx_buf[40];      //holds string that receives data from uart
 
+char uart1_tx_buf[40];      //holds string to send to UART
+char uart1_rx_buf[40];      //holds string that receives data from UART
+
+
+void uart1_puts(const char *str) {
+	return;	
+}
+
+
 //******************************************************************
 //                        uart_putc
 //

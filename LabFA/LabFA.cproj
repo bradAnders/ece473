@@ -157,6 +157,12 @@
     <Compile Include="lm73_functions.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="si4734.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="si4734.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="twi_master.c">
       <SubType>compile</SubType>
     </Compile>
