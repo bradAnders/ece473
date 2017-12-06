@@ -17,9 +17,9 @@
 #define SEL1 PB5
 #define SEL2 PB6
 #define PWM_BRT  PB7
-#define SHLD_ENC PD2
-#define OE_N_BG PD3
-#define D_BP PD4
+#define SHLD_ENC PD4
+#define OE_N_BG PD5
+#define D_BP PD7
 #define PWM_VOL PE3
 #define CDS  PF7
 
@@ -46,6 +46,11 @@
 #define True 1
 #define False 0
 typedef unsigned char bool;
+
+
+// Function prototypes
+void readADC();
+void twiRx();
 
 
 

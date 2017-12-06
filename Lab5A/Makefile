@@ -1,6 +1,6 @@
 PRG            =Lab5A
 
-OBJ            = $(PRG).o hd44780.o button7segFunctions.o encoderFunctions.o twi_master.o lm73_functions.o
+OBJ            = $(PRG).o uart_functions.o hd44780.o button7segFunctions.o encoderFunctions.o twi_master.o lm73_functions.o
 
 MCU_TARGET     = atmega128
 OPTIMIZE       = -O2    # options are 1, 2, 3, s

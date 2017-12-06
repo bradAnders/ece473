@@ -18,6 +18,7 @@
 #include "encoderFunctions.h"
 #include "lm73_functions.h"
 #include "twi_master.h"
+#include "uart_functions.h"
 
 bool a = TRUE;
 bool b = FALSE;
@@ -47,12 +48,16 @@ volatile uint8_t snuze_h=12;
 uint8_t hours12_24 = 12;
 uint8_t am_pm = 0;
 uint8_t alarmBeep=0;
+uint8_t timeToCheckForRX = 1;
+uint8_t timeToSPI = 0;
+uint8_t timeTo7Seg = 0;
 
 // Text to be displayed to LCD
 volatile char *lcdText1 = "Welcome";
 volatile char *lcdText2 = "Welcome";
 volatile char *lcdTextTemp = "Temperature";
 volatile char *lcdTextVolume = "Volume";
+volatile char *uartString = "UART";
 volatile uint8_t volume = 100;
 
 // Number displayed to 7seg
@@ -151,16 +156,10 @@ void spiTxRx() {
 //******************************************************************************
 ISR(TIMER0_OVF_vect) {
     static uint8_t clock=0;
-    static uint8_t spiCount=0;
     clock++;
-    spiCount++;
-
-    if (spiCount == 15) {
-        spiCount = 0;
-        //volume++;
-    }
-
+	
     if (clock == 128){
+		timeToCheckForRX = 1;
         clock_s++;
         clock = 0;
     }
@@ -191,8 +190,7 @@ ISR(TIMER0_OVF_vect) {
 //      -- Timer 1 Compare Interrupt: Alarm signal generation -- 
 //*****************************************************************************
 ISR(TIMER1_COMPA_vect) {
-    //PORTD ^= (1<<D_BP);
-    PORTD ^= (1<<D_BP);
+	PORTD ^= (1<<D_BP);
 }//ISR
 
 
@@ -206,9 +204,17 @@ ISR(TIMER1_COMPA_vect) {
 
 //*****************************************************************************
 //      -- Timer 3 Compare Interrupt: Audio Amp Volume to DAC --
-//      -- Also use this as a slower interrupt for SPI Rx/Tx --
+//      -- Also use this as a slower interrupt for various functionality --
 //*****************************************************************************
-// NO ISR NEEDED; PWM GOES STRAIGHT TO OUTPUT PIN
+ISR(TIMER3_OVF_vect) {
+	//static char buffer[17];
+	
+	// -- 7 SEG BRIGHTNESS --
+	// Read the value of the photo resistor
+	readADC();
+	// Set the brightness of the LCD
+	OCR2 = 255- (adc_result)/4;
+}
 
 
 
@@ -226,7 +232,7 @@ void timer_init() {
     // Timer/Counter Interrupt Mask, pg109
     //    Timer 0: overflow interrupt enable
     TIMSK |= (1<<TOIE0) | (1<<OCIE1A) | (1<<OCIE3A);
-    //ETIMSK |= (1<<TOIE3);
+    ETIMSK |= (1<<TOIE3);
 
     // Timer/Counter Control Register, pg104
     // Timer 0: 32kHz osc. for internal clock
@@ -246,7 +252,7 @@ void timer_init() {
     DDRE = 0xFF;
     PORTE = 0xFF;
     TCCR3A = (1<<WGM31)|(0<<WGM30) | (1<<COM3A1)|(0<<COM3A0);
-    TCCR3B = (0<<WGM33)|(1<<WGM32) | (0<<CS32)|(1<<CS31)|(0<<CS30);
+    TCCR3B = (0<<WGM33)|(1<<WGM32) | (1<<CS32)|(0<<CS31)|(0<<CS30);
     OCR3A = 70;
 
 }
@@ -299,7 +305,7 @@ void update7Seg() {
 
         //dimming/flicker correction
         //_delay_ms(10);
-        _delay_us(1000);
+        _delay_us(600);
     }//for
 
     PORTB &= SELCL;
@@ -412,22 +418,62 @@ void stateSwitcher() {
 //******************************************************************************
 void twiRx() {
 	
-	uint16_t lm73_temp_local; //  local temperature
-	char tempCharLocal[2];
+	uint16_t lm73_temp_local = 0; //  local temperature
+	//char tempCharRemote[3] = "??"; //  local temperature
+	char tempCharLocal[3] = "??";
 	static char buffer[17];
 	
-	// -- TWI Read --
-	twi_start_rd(lm73_address_local, lm73_rd_buf, 2); //read temperature data from LM73 (2 bytes)
-	_delay_ms(2);    //wait for it to finish
-	lm73_temp_local = lm73_rd_buf[0]; //save high temperature byte into lm73_temp
-	lm73_temp_local = lm73_temp_local << 8; //shift it into upper byte
-	lm73_temp_local |= lm73_rd_buf[1]; //"OR" in the low temp byte to lm73_temp
-	lm73_temp_local = lm73_temp_convert(tempCharLocal, lm73_temp_local, 1); //convert to string in array with itoa() from avr-libc
-		
-	sprintf(buffer, "I %d O   ",lm73_temp_local);
-	//sprintf(buffer,"%-16s",buffer);
-	lcdTextTemp = buffer;
+	if (timeToCheckForRX) {
+		timeToCheckForRX = 0;
 	
+	
+		// -- TWI Read --
+		twi_start_rd(lm73_address_local, lm73_rd_buf, 2); //read temperature data from LM73 (2 bytes)
+		_delay_ms(2);    //wait for it to finish
+		lm73_temp_local = lm73_rd_buf[0]; //save high temperature byte into lm73_temp
+		lm73_temp_local = lm73_temp_local << 8; //shift it into upper byte
+		lm73_temp_local |= lm73_rd_buf[1]; //"OR" in the low temp byte to lm73_temp
+		lm73_temp_local = lm73_temp_convert(tempCharLocal, lm73_temp_local, 1); //convert to string in array with itoa() from avr-libc
+		
+	
+		//uart_putc('t');
+		//_delay_ms(30);    //wait for it to finish
+		//tempCharRemote[0] = uart_getc();
+		//tempCharRemote[0] = 'n';
+		//_delay_ms(2);    //wait for it to finish
+		//tempCharRemote[1] = uart_getc();
+		//_delay_ms(2);    //wait for it to finish
+		//tempCharRemote[2] = '\0';
+		
+		sprintf(buffer, "I=%d O=%s",lm73_temp_local, uartString);
+		
+		
+		// -- VOLUME --
+		OCR3A = (volume<<1);
+		sprintf(buffer,"%s V=%d%%",lcdTextTemp, (int)(volume/2.50));
+		//sprintf(buffer,tempCharRemote);
+	}
+	
+	sprintf(buffer,"%-16s",buffer);
+	lcdTextTemp = buffer;
+}
+
+
+
+void uartTxRx() {
+	static char buffer[16] = "no!";
+	//static uint8_t count = 0;
+	
+	uart_putc('t');
+	_delay_ms(3);    //wait for it to finish
+	
+	// When nothing to receive, uart_getc returns 0, which is also null char
+	buffer[0] = uart_getc();
+	buffer[1] = uart_getc();
+	buffer[2] = 0;
+		
+	//sprintf(buffer,"%-16s",buffer);
+	uartString = buffer;
 }
 
 
@@ -438,7 +484,6 @@ void twiRx() {
 //******************************************************************************
 int main(void) {
 	
-	char buffer[17];
     digit_init();
     timer_init();
     spi_init();
@@ -446,9 +491,14 @@ int main(void) {
 	init_twi();
     adc_init(CDS);
     clear_display();
+	uart_init();
+	
+	DDRE = 0xFF;		//PORTE output, low
+	PORTE = 0x00;
 
 	//set LM73 mode for reading temperature by loading pointer register
 	lm73_wr_buf[0] = 0x00; //load lm73_wr_buf[0] with temperature pointer address
+	//char text = ' ';
 	
 	// Tell TWI to start writing, number of bytes = 2
 	twi_start_wr(lm73_address_local, lm73_wr_buf, 2);
@@ -475,39 +525,29 @@ int main(void) {
         if (alarm_h >= 60)
             alarm_h = 0;
 
-
-        interpret_encoders();
+     
         // -- READ BUTTONS --
         toggle_button_bus();
 
-
-        // -- 7 SEG BRIGHTNESS --
-        // Read the value of the photo resistor
-        readADC();
-        // Set the brightness of the LCD
-        OCR2 = 255- (adc_result)/4;
-
-		// -- SPI: Transfer and receive using global buffers --
-        spiTxRx();
+		spiTxRx();
+		interpret_encoders();
 		
+		
+		// -- UART --
+		uartTxRx();
+		
+		
+		// -- TWI --
 		twiRx();
-
-
-		// -- VOLUME --
-		//memset(buffer,0,strlen(buffer));
-		OCR3A = (volume<<1);
-		//segNum = volume;
-		sprintf(buffer,"%s V %d%%",lcdTextTemp, (int)(volume/2.50));
-		sprintf(buffer,"%-16s",buffer);
-		lcdTextTemp = buffer;
-
+		//text = uart_getc();
+		//char2lcd(text);
+		//lcdTextTemp = "                 ";
+		
 
         // -- TIME DISPLAY --
 
         // Display the button latch state on the bargraph
-        //barNum = clock_s;
-        barNum = volume;
-        //barNum = encoderState;
+        barNum = clock_s;
 
         // Convert minutes and hours to a number for displaying
         if (STATE == SET_ALARM)
@@ -536,10 +576,8 @@ int main(void) {
                 break;
         }
 
-
-        // Prints new values to the 7 seg display
-        update7Seg();
-
+		update7Seg();
+        
         // Alarm Beeping
         if (STATE == ALARM) {
             if (alarmBeep)

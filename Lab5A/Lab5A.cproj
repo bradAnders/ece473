@@ -163,6 +163,12 @@
     <Compile Include="twi_master.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="uart_functions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="uart_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile">
