@@ -1,0 +1,144 @@
+
+//  -- Power Pins --
+//  BLACK  := VCC
+//  WHTITE := GND
+
+
+//  -- Button Board --
+//  J1  :=  Brown
+//  J2  :=  Red
+//  J3  :=  Orange
+//  J4  :=  Yellow
+//  J5  :=  Green
+//  J6  :=  Blue
+//  J7  :=  Purple
+//  J9  :=  Gray
+//
+//  GND     :=  White
+//  VCC     :=  Black
+//  SW_COM  :=  *nc*
+//  COM_LVL :=  Brown   (GND)
+//  COM_EN  :=  Orange  (7seg DEC7)
+
+
+//  -- 4 Digit Display --
+//  SEL0  :=  Green     (PORTB 4)
+//  SEL1  :=  Blue      (PORTB 5)
+//  SEL2  :=  Purple    (PORTB 6)
+//  EN    :=  White     (VCC)
+//  EN_N  :=  Black     (GND)
+//  PWM   :=  Gray      (PORTF 3)
+//  DEC5  :=  *nc*
+//  DEC6  :=  *nc*
+//  DEC7  :=  Orange    (buttonBoard COM_EN)
+//  NC    :=  NC
+//
+//  A   :=  Brown   (buttonBoard J1)
+//  B   :=  Red     (buttonBoard J2)
+//  C   :=  Orange  (buttonBoard J3)
+//  D   :=  Yellow  (buttonBoard J4)
+//  E   :=  Green   (buttonBoard J5)
+//  F   :=  Blue    (buttonBoard J6)
+//  G   :=  Purple  (buttonBoard J7)
+//  DP  :=  Gray    (buttonBoard J8)
+//
+//  A_2   :=  Rib0-Red  (PORTA 0)
+//  B_2   :=  Rib1      (PORTA 1)
+//  C_2   :=  Rib2      (PORTA 2)
+//  D_2   :=  Rib3      (PORTA 3)
+//  E_2   :=  Rib4      (PORTA 4)
+//  F_2   :=  Rib5      (PORTA 5)
+//  G_2   :=  Rib6      (PORTA 6)
+//  DP_2  :=  Rib7      (PORTA 7)
+//  GND   :=  Rib8      (PORTA 8)
+//  VCC   :=  Rib9      (PORTA 9)
+
+
+//  -- Encoders --
+//  NC    :=  *nc*
+//  NC    :=  Brown   *nc*
+//  NC    :=  Red     *nc*
+//  NC    :=  Orange  *nc*
+//  SOUT  :=  Yellow  (PORTB 3)
+//  SIN   :=  Green   *nc*
+//  CKINH :=  Blue    (GND, Clock Inhibiter)
+//  SCK   :=  Purple  (PORTB 1, Clock)
+//  SH/LD :=  Gray    (PORTE 6, Shift/Load)
+//  GND   :=  White
+//  VCC   :=  Black
+
+
+//  -- Bar Graph --
+//  SD_OUT  :=  Brown   *nc*
+//  SRCLK   :=  Red     (PB1 SCLK)
+//  REGCLK  :=  Orange  (PB0)
+//  OE_N    :=  Yellow  (PB7)
+//  SDIN    :=  Green   (PB2 MOSI)
+//  VDD     :=  Black
+//  GND     :=  White
+
+
+//  -- PORTA -> 4 Digit Display --
+//  PA0 :=  Rib0 (Red)
+//  PA1 :=  Rib1
+//  PA2 :=  Rib2
+//  PA3 :=  Rib3
+//  PA4 :=  Rib4
+//  PA5 :=  Rib5
+//  PA6 :=  Rib6
+//  PA7 :=  Rib7
+//  PA8 :=  Rib8
+//  PA9 :=  Rib9
+
+
+//  -- PORTB --
+//  PB0 :=  Orange  (bargraph REGCLK)
+//  PB1 :=  Red     (bargraph&encoder SCLK)
+//  PB2 :=  Green   (bargraph MOSI)
+//  PB3 :=  YELLOW  (encoder SIN)
+//  PB4 :=  Green   (7seg SEL0)
+//  PB5 :=  Blue    (7seg SEL1)
+//  PB6 :=  Purple  (7seg SEL2)
+//  PF3 :=  Gray    (7seg PWM)
+//  PB8 :=  White   (GND)
+//  PB9 :=  Black   (VCC)
+
+
+//  -- PORTD --
+//  PD0 :=  SCL     (TWI temp)
+//  PD1 :=  SDA     (TWI temp)
+//  PD2 :=  		(UART1 RX)
+//  PB3 :=  		(UART1 TX)
+//  PD4 :=  Gray    (Shift/Load encoder)
+//  PD5 :=  Yellow  (bargraph OE_N)
+//  PD6 :=  *nc*
+//  PD7 :=  Purple	(PWM for alarm beeping)
+//  PD8 :=  White (GND)
+//  PD9 :=  Black (VCC)
+
+
+//  -- PORTE--
+//  PE0 :=  *nc*
+//  PE1 :=  Reset_N (Radio)
+//  PE2 :=  *nc*
+//  PE3 :=  PurVolume PWM
+//  PE4 :=  *nc*
+//  PE5 :=  *nc*
+//  PE6 :=  *nc*
+//  PE7 :=  Int7    (Radio)
+//  PE8 :=  *nc*
+//  PE9 :=  *nc*
+
+
+//  -- PORTF --
+//  PF0 :=  *nc*
+//  PF1 :=  *nc*
+//  PF2 :=  *nc*
+//  PF3 :=  *nc*
+//  PF4 :=  *nc*
+//  PF5 :=  *nc*
+//  PF6 :=  *nc*
+//  PF7 :=  Orange  (CdS Brightness)
+//  PF8 :=  *nc*
+//  PF9 :=  *nc*
+

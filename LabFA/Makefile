@@ -23,7 +23,7 @@ $(PRG).elf: $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) -DF_CPU=$(F_CPU)
 
 clean: 
-	rm -rf *.o *.hex *.elf
+	rm -rf *.o *.hex
 	#rm -rf *.o $(PRG).elf *.bin *.hex *.srec *.bak  
 	rm -rf $(PRG)_eeprom.bin $(PRG)_eeprom.hex $(PRG)_eeprom.srec
 	rm -rf *.lst *.map 
