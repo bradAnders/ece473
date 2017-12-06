@@ -94,7 +94,7 @@ void digit_init(){
 //  external loop delay times 12.
 //******************************************************************************
 uint8_t chk_button(uint8_t button) {
-    // Static array is initialied once at compile time
+    // Static array is initialized once at compile time
     static uint16_t State[8] = {0};   
 
     State[button] = (State[button]<<1) | !bit_is_clear(PINA, button) | 0xE000;

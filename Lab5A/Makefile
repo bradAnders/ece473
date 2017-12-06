@@ -1,6 +1,6 @@
 PRG            =Lab5A
 
-OBJ            = $(PRG).o hd44780.o button7segFunctions.o encoderFunctions.o
+OBJ            = $(PRG).o hd44780.o button7segFunctions.o encoderFunctions.o twi_master.o lm73_functions.o
 
 MCU_TARGET     = atmega128
 OPTIMIZE       = -O2    # options are 1, 2, 3, s
@@ -16,22 +16,22 @@ override LDFLAGS       = -Wl,-Map,$(PRG).map
 OBJCOPY        = avr-objcopy
 OBJDUMP        = avr-objdump
 
-all: $(PRG).elf
+all: $(PRG).hex
 #all: $(PRG).elf lst txt eeprom
 
 $(PRG).elf: $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) -DF_CPU=$(F_CPU)
 
 clean: 
-	rm -rf *.o $(PRG).elf
+	rm -rf *.o *.hex *.elf
 	#rm -rf *.o $(PRG).elf *.bin *.hex *.srec *.bak  
 	rm -rf $(PRG)_eeprom.bin $(PRG)_eeprom.hex $(PRG)_eeprom.srec
 	rm -rf *.lst *.map 
 
 program: $(PRG).hex
 	
-	sudo avrdude -c usbasp -p m128 -P usb -e -U flash:w:$(PRG).hex  -v
-	#sudo avrdude -c usbasp -p m128 -e -U flash:w:$(PRG).hex  -v
+	#sudo avrdude -c usbasp -p m128 -P usb -e -U flash:w:$(PRG).hex  -v
+	sudo avrdude -c usbasp -p m128 -e -U flash:w:$(PRG).hex  -v
 
 lst:  $(PRG).lst
 

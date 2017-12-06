@@ -276,8 +276,8 @@ void increment(uint8_t LR) {
             break;
         case DISP_TIME:
             volume += 10;
-            if (volume >= 240)
-                volume = 240;
+            if (volume < 10)
+                volume = 250;
             break;
         default:
             break;
@@ -306,9 +306,9 @@ void decrement(uint8_t LR) {
             }
             break;
         case DISP_TIME:
-            volume -= 10;;
-            if (volume <= 11)
-                volume = 11;
+            volume -= 10;
+            if (volume > 240)
+                volume = 0;
         default:
             break;
     }

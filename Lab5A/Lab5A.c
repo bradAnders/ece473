@@ -11,10 +11,13 @@
 #include <avr/interrupt.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h> // sprintf
 #include "Lab5A.h"
 #include "hd44780.h"
 #include "button7segFunctions.h"
 #include "encoderFunctions.h"
+#include "lm73_functions.h"
+#include "twi_master.h"
 
 bool a = TRUE;
 bool b = FALSE;
@@ -24,7 +27,12 @@ enum states STATE = DISP_TIME;
 
 // Variables for ADC
 uint8_t  i;              //dummy variable
-uint16_t adc_result;     //holds adc result
+uint16_t adc_result;     //holds ADC result
+
+// TWI interface buffers
+extern uint8_t lm73_wr_buf[2];
+extern uint8_t lm73_rd_buf[2];
+const uint8_t lm73_address_local = 0b10010000;     // Model 0, pin floating
 
 // Clock hour, minute, second
 volatile uint8_t clock_s=0;
@@ -43,7 +51,9 @@ uint8_t alarmBeep=0;
 // Text to be displayed to LCD
 volatile char *lcdText1 = "Welcome";
 volatile char *lcdText2 = "Welcome";
-volatile uint8_t volume = 128;
+volatile char *lcdTextTemp = "Temperature";
+volatile char *lcdTextVolume = "Volume";
+volatile uint8_t volume = 100;
 
 // Number displayed to 7seg
 volatile uint16_t segNum = 0;
@@ -65,7 +75,7 @@ void stateSwitcher();
 //      -- Serial Peripheral Interface Initialization --
 //  Modified from Roger Traylor's source file
 //****************************************************************************
-void spi_init(void){
+void spi_init(void) {
 
     // -- LCD INIT --
     /* Run this code before attempting to write to the LCD.*/ 
@@ -139,7 +149,7 @@ void spiTxRx() {
 //      -- Timer 0 Compare Interrupt --i
 // Using the internal 32.768 KHz oscillator to implement a clock
 //******************************************************************************
-ISR(TIMER0_OVF_vect){
+ISR(TIMER0_OVF_vect) {
     static uint8_t clock=0;
     static uint8_t spiCount=0;
     clock++;
@@ -180,7 +190,7 @@ ISR(TIMER0_OVF_vect){
 //*****************************************************************************
 //      -- Timer 1 Compare Interrupt: Alarm signal generation -- 
 //*****************************************************************************
-ISR(TIMER1_COMPA_vect){
+ISR(TIMER1_COMPA_vect) {
     //PORTD ^= (1<<D_BP);
     PORTD ^= (1<<D_BP);
 }//ISR
@@ -198,20 +208,14 @@ ISR(TIMER1_COMPA_vect){
 //      -- Timer 3 Compare Interrupt: Audio Amp Volume to DAC --
 //      -- Also use this as a slower interrupt for SPI Rx/Tx --
 //*****************************************************************************
-ISR(TIMER3_OVF_vect){
-    //DDRE |= 0b00000010;
-    //PORTE ^= 0b00000010;
-    //PORTD ^= (1<<PWM_VOL);
-    //volume += 10;
-
-}//ISR
+// NO ISR NEEDED; PWM GOES STRAIGHT TO OUTPUT PIN
 
 
 
 //******************************************************************************
 //      -- TIMER Initialization --
 //******************************************************************************
-void timer_init(){
+void timer_init() {
 
     // Timer counter 0 setup, running off i/o clock
 
@@ -246,6 +250,8 @@ void timer_init(){
     OCR3A = 70;
 
 }
+
+
 
 //******************************************************************************
 //      -- Initializes the analog->digital converter --
@@ -327,6 +333,7 @@ void readADC() {
 } // end readADC
 
 
+
 //******************************************************************************
 //      -- Handles State Logic
 //******************************************************************************
@@ -368,8 +375,9 @@ void stateSwitcher() {
 
     switch (STATE) {
         case DISP_TIME: // Display Time
-            lcdText1 = "Displaying time ";
-            lcdText2 = "                ";
+            lcdText1 = "signal          ";
+            lcdText2 = lcdTextTemp;
+			//lcdText2 = "hello           ";
             //strcat(lcdText2, itoa(temp, buffer, 10));
             //lcdText2[11] = 0;
             break;
@@ -399,20 +407,54 @@ void stateSwitcher() {
 
 
 
+//******************************************************************************
+//      -- Transmits and Receives to/from SPI --
+//******************************************************************************
+void twiRx() {
+	
+	uint16_t lm73_temp_local; //  local temperature
+	char tempCharLocal[2];
+	static char buffer[17];
+	
+	// -- TWI Read --
+	twi_start_rd(lm73_address_local, lm73_rd_buf, 2); //read temperature data from LM73 (2 bytes)
+	_delay_ms(2);    //wait for it to finish
+	lm73_temp_local = lm73_rd_buf[0]; //save high temperature byte into lm73_temp
+	lm73_temp_local = lm73_temp_local << 8; //shift it into upper byte
+	lm73_temp_local |= lm73_rd_buf[1]; //"OR" in the low temp byte to lm73_temp
+	lm73_temp_local = lm73_temp_convert(tempCharLocal, lm73_temp_local, 1); //convert to string in array with itoa() from avr-libc
+		
+	sprintf(buffer, "I %d O   ",lm73_temp_local);
+	//sprintf(buffer,"%-16s",buffer);
+	lcdTextTemp = buffer;
+	
+}
+
+
 
 //******************************************************************************
 //                                  main
 //  Does main stuff
 //******************************************************************************
 int main(void) {
-
+	
+	char buffer[17];
     digit_init();
     timer_init();
     spi_init();
     lcd_init();
+	init_twi();
     adc_init(CDS);
     clear_display();
 
+	//set LM73 mode for reading temperature by loading pointer register
+	lm73_wr_buf[0] = 0x00; //load lm73_wr_buf[0] with temperature pointer address
+	
+	// Tell TWI to start writing, number of bytes = 2
+	twi_start_wr(lm73_address_local, lm73_wr_buf, 2);
+	
+	// Wait for the transfer to finish
+	_delay_ms(2);
 
     sei();
 
@@ -445,8 +487,20 @@ int main(void) {
         // Set the brightness of the LCD
         OCR2 = 255- (adc_result)/4;
 
-
+		// -- SPI: Transfer and receive using global buffers --
         spiTxRx();
+		
+		twiRx();
+
+
+		// -- VOLUME --
+		//memset(buffer,0,strlen(buffer));
+		OCR3A = (volume<<1);
+		//segNum = volume;
+		sprintf(buffer,"%s V %d%%",lcdTextTemp, (int)(volume/2.50));
+		sprintf(buffer,"%-16s",buffer);
+		lcdTextTemp = buffer;
+
 
         // -- TIME DISPLAY --
 
@@ -461,9 +515,7 @@ int main(void) {
         else 
             segNum = clock_m + 100*clock_h;
 
-        OCR3A = (volume<<1);
-        //segNum = volume;
-
+		
         // Update number to digitSelect[i]
         segsum(segNum);
         if (am_pm)
